@@ -55,9 +55,11 @@ int main(int argc ,char *argv[])
 
                 printf(GREEN"\n-> Proceeding to Encoding .... ! \n"RESET);
 
+                sleep(1);
+
                 if(Start_encoding(&encoInfo))
                 {
-                    printf(GREEN"\nEncoding Successfull...!\n"RESET);
+                    printf(GREEN"\nEncoding Successfull...!\n\n"RESET);
                 }
                 else
                 {

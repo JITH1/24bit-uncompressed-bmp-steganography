@@ -33,8 +33,14 @@ Status Start_encoding(Encode_info *encoInfo);
 Status Open_all_files(Encode_info *encoInfo);
 Status add_bmp_header(Encode_info *encoInfo);
 Status Encode_Magic_String(Encode_info *encoInfo,char *magic_str);
+Status Encode_secret_file_extn_size(Encode_info *encoInfo);
+Status Encode_secret_file_extn(Encode_info *encoInfo);
+Status Encode_secret_file_size(Encode_info *encoInfo);
+Status Encode_secret_file_data(Encode_info *encoInfo);
+Status Encode_remaining(Encode_info *encoInfo);
 
 
 Status Encode_bits(char bits,char buffer[]);
+Status Encode_size(uint size,char buffer[]);
 
 #endif

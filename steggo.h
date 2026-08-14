@@ -5,6 +5,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<stdint.h>
+#include<unistd.h>
 
 #define RED    "\033[31m"
 #define YELLOW "\033[33m"

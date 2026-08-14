@@ -207,18 +207,50 @@ Status Start_encoding(Encode_info *encoInfo)
         printf(GREEN"\nCan't Open Files...!\n"RESET);
         return FAILURE ;
     }
-
+    sleep(1);
     if(!add_bmp_header(encoInfo))
     {
         printf(GREEN"\nHeader Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    
+    sleep(1);
     if(!Encode_Magic_String(encoInfo,MAGIC))
     {
         printf(RED"\nMagic String Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
+    sleep(1);
+    if(!Encode_secret_file_extn_size(encoInfo))
+    {
+        printf(RED"\nSecret File Extn Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+    sleep(1);
+    if(!Encode_secret_file_extn(encoInfo))
+    {
+        printf(RED"\n# Secret File Extn Failed...!\n"RESET);
+        return FAILURE ;
+    }
+    sleep(1);
+    if(!Encode_secret_file_size(encoInfo))
+    {
+        printf(RED"\n# Secret File Size Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+    sleep(1);
+    if(!Encode_secret_file_data(encoInfo))
+    {
+        printf(RED"\n# Secret File Data Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+    sleep(1);
+    if(!Encode_remaining(encoInfo))
+    {
+        printf(RED"\n# Pixel Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+
+    return SUCCESS ; 
 
 }
 
@@ -288,12 +320,104 @@ Status Encode_Magic_String(Encode_info *encoInfo,char *magic_str)
      }
      
      encoInfo->bytes_encoded = encoInfo->bytes_encoded + write ;
-
-     printf(GREEN"\n# Magic String Successfully Encoded\n"RESET);
-
+     
      printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
 
+     printf("\n# Magic String Successfully Encoded\n"RESET);
+
      return SUCCESS ;
+}
+
+Status Encode_secret_file_extn_size(Encode_info *encoInfo)
+{
+    char buffer[32];
+    uint size = strlen(encoInfo->secret_file_extn);
+
+    fread(buffer,1,32,encoInfo->source_file_ptr);
+
+    Encode_size(size,buffer);
+
+    encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,32,encoInfo->Output_file_ptr);
+    
+    printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+    printf("\n# Secret File Extn Size Encoded...!\n"RESET);
+    
+    return SUCCESS ;
+
+}
+
+Status Encode_secret_file_extn(Encode_info *encoInfo)
+{
+    uint size = strlen(encoInfo->secret_file_extn);
+
+    char buffer[8] ;
+    
+    for(int i = 0 ; i<size ;  i++)
+    {
+        fread(buffer,1,8,encoInfo->source_file_ptr);
+
+        Encode_bits(encoInfo->secret_file_extn[i],buffer);
+
+        encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,8,encoInfo->Output_file_ptr); 
+    }
+
+    printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+    printf("\n# Secret File Extn Encoded...!\n"RESET);
+
+    return SUCCESS ;
+
+}
+
+Status Encode_secret_file_size(Encode_info *encoInfo)
+{
+    char buffer[32];
+    
+    fread(buffer,1,32,encoInfo->source_file_ptr);
+
+    Encode_size(encoInfo->secret_file_size,buffer);
+
+    encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,32,encoInfo->Output_file_ptr);
+
+    printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+    printf("\n# Secret File Size Encoded...!\n"RESET);
+
+    return SUCCESS ;
+}
+
+Status Encode_secret_file_data(Encode_info *encoInfo)
+{
+    char buffer[8];
+
+    uint size = strlen(encoInfo->secret_file_data);
+
+    for(int i = 0 ; i<size ; i++)
+    {
+        fread(buffer,1,8,encoInfo->source_file_ptr);
+        Encode_bits(encoInfo->secret_file_data[i],buffer);
+        encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,8,encoInfo->Output_file_ptr); 
+    }
+    
+    printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+    printf("\n# Secret File Data Encoded...!\n"RESET);
+
+    return SUCCESS ;
+    
+}
+
+Status Encode_remaining(Encode_info *encoInfo)
+{
+    char buffer[32];
+
+    while((fread(buffer,1,32,encoInfo->source_file_ptr)) > 0)
+    {
+        encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,32,encoInfo->Output_file_ptr);
+    }
+
+    return SUCCESS ;
 }
 
 Status Encode_bits(char bits,char buffer[])
@@ -301,9 +425,20 @@ Status Encode_bits(char bits,char buffer[])
     for(int i = 0; i<8 ; i++)
     {
         uint n = (bits >> (7-i)) & 1 ;
-        buffer[i] = ( buffer[i] & 0xFE ) | n ;
+        buffer[i] = (buffer[i] & 0xFE ) | n ;
     }
 
     return SUCCESS;
+}
+
+Status Encode_size(uint size,char buffer[])
+{
+    for(int i = 0 ; i<32 ; i++)
+    {
+        unsigned int n = (size >> (31 - i)) & 1 ;
+        buffer[i] = (buffer[i] & 0xFE) | n ;
+    }
+
+    return SUCCESS ;
 }
 
