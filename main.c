@@ -51,7 +51,20 @@ int main(int argc ,char *argv[])
 
             if(Validate_encode_files(&encoInfo,argv))
             {
-                printf(GREEN"\nEncode File Validation Successfull...!\n"RESET);
+                printf(GREEN"\nEncode File Validation Successfull...!\n\n"RESET);
+
+                printf(GREEN"\nProceeding to Encoding .... ! \n"RESET);
+
+                if(Start_encoding(&encoInfo))
+                {
+                    printf(GREEN"\nEncoding Successfull...!\n"RESET);
+                }
+                else
+                {
+                    printf(RED"\nEncoding Failed...!\n"RESET);
+                    return FAILURE ;
+                }
+                
             }
             else
             {

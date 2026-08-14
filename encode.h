@@ -25,5 +25,8 @@ typedef struct
 
 Status Validate_encode_arguments(Encode_info *encoInfo,char *argv[]);
 Status Validate_encode_files(Encode_info *encoInfo,char *argv[]);
+Status extract_secret_file_extn_data(Encode_info *encoInfo);
+Status Start_encoding(Encode_info *encoInfo);
+
 
 #endif

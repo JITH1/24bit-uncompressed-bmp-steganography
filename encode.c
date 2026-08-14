@@ -112,10 +112,16 @@ Status Validate_encode_files(Encode_info *encoInfo,char *argv[])
 
     encoInfo->secret_file_size  = read ;
 
+    if(encoInfo->secret_file_size > sizeof(encoInfo->secret_file_data))
+    {
+        printf(RED"\nPlease Increase Buffer size...!\n"RESET);
+        return FAILURE ;
+    }
+
     printf(GREEN"\n# The size of secret file %s is : %lu\n"RESET,encoInfo->Secret_file_name,encoInfo->secret_file_size);
 
     fseek(fsource,18,SEEK_SET);
-    
+
     fread(&width,sizeof(width),1,fsource);
     fread(&hight,sizeof(hight),1,fsource);
 
@@ -126,23 +132,64 @@ Status Validate_encode_files(Encode_info *encoInfo,char *argv[])
     
     printf(GREEN"# The %s capacity is : %u\n"RESET,encoInfo->source_file_name,encoInfo->source_bmp_capacity);
     
-    uint total_encoding_size = (uint)16 + (uint)32 + (uint)32 + (uint)32 + encoInfo->secret_file_size * 8 ;
+    uint total_encoding_size = (uint)16 + (uint)32 + (uint)32 + (uint)32 + (uint)54 + encoInfo->secret_file_size * 8 ;
 
     printf(GREEN"\nTotal Size Required For Encoding : %u\n",total_encoding_size);
 
     if(total_encoding_size <= encoInfo->source_bmp_capacity)
     {
-        printf(GREEN"\nSufficient Size For Encoding Secret Data...!\n"RESET);
+        printf(GREEN"\n-> bmp file have Sufficient Size For Encoding Secret Data...!\n"RESET);
     }
     else
     {
         printf(RED"\nInsufficient Space For Encoding Secret Data...!\n"RESET);
         return FAILURE ;
     }
-
+    
     fclose(encoInfo->Secret_file_ptr);
     fclose(fsource);
 
+    if(!extract_secret_file_extn_data(encoInfo))
+    return FAILURE ;
+    
     return SUCCESS ;
 
 }
+
+Status extract_secret_file_extn_data(Encode_info *encoInfo)
+{
+    char *ptr = strrchr(encoInfo->Secret_file_name,'.');
+
+    if(!ptr)
+    {
+        printf(RED"\nError Can't Find Extention...!\n"RESET);
+        return FAILURE ; 
+    }
+
+    strcpy(encoInfo->secret_file_extn,ptr);
+    
+    printf(GREEN"\n# Secret File Extn %s extracted \n"RESET,encoInfo->secret_file_extn);
+    
+    encoInfo->Secret_file_ptr = fopen(encoInfo->Secret_file_name,"r");
+
+    int i = 0 ;
+
+    char ch ;
+
+    while((ch = fgetc(encoInfo->Secret_file_ptr))!= EOF)
+    {
+        encoInfo->secret_file_data[i] = ch ;
+        i++;
+    }
+    
+    encoInfo->secret_file_data[i] = '\0' ;
+
+    printf(GREEN"# Secret File Data Extracted...!\n"RESET);
+
+    fclose(encoInfo->Secret_file_ptr);
+    
+    return SUCCESS ;
+
+}
+
+Start_encoding(Encode_info *encoInfo)
