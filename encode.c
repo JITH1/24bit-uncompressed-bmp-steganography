@@ -145,12 +145,18 @@ Status Validate_encode_files(Encode_info *encoInfo,char *argv[])
         printf(RED"\nInsufficient Space For Encoding Secret Data...!\n"RESET);
         return FAILURE ;
     }
+
+    fseek(fsource,10,SEEK_SET);
+
+    fread(&encoInfo->source_pixel_offset,4,1,fsource);
     
     fclose(encoInfo->Secret_file_ptr);
     fclose(fsource);
 
     if(!extract_secret_file_extn_data(encoInfo))
-    return FAILURE ;
+    {
+        return FAILURE ;
+    }
     
     return SUCCESS ;
 
@@ -192,4 +198,112 @@ Status extract_secret_file_extn_data(Encode_info *encoInfo)
 
 }
 
-Start_encoding(Encode_info *encoInfo)
+Status Start_encoding(Encode_info *encoInfo)
+{
+    encoInfo->bytes_encoded = 0;
+
+    if(!Open_all_files(encoInfo))
+    {
+        printf(GREEN"\nCan't Open Files...!\n"RESET);
+        return FAILURE ;
+    }
+
+    if(!add_bmp_header(encoInfo))
+    {
+        printf(GREEN"\nHeader Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+    
+    if(!Encode_Magic_String(encoInfo,MAGIC))
+    {
+        printf(RED"\nMagic String Encoding Failed...!\n"RESET);
+        return FAILURE ;
+    }
+
+}
+
+Status Open_all_files(Encode_info *encoInfo)
+{ 
+     encoInfo->source_file_ptr = fopen(encoInfo->source_file_name,"r");
+
+     if(!encoInfo->source_file_ptr)
+     {
+        printf(RED"\nCan't Open Source File..!\n"RESET);
+        return FAILURE;
+     }
+
+     encoInfo->Secret_file_ptr = fopen(encoInfo->Secret_file_name,"r");
+
+     if(!encoInfo->Secret_file_ptr)
+     {
+        printf(RED"\nCan't Open Secret File..!\n"RESET);
+        return FAILURE;
+     }
+
+     encoInfo->Output_file_name = "Steggo_out.bmp";
+
+     encoInfo->Output_file_ptr = fopen(encoInfo->Output_file_name,"w");
+
+     if(!encoInfo->Output_file_ptr)
+     {
+        printf(RED"\nCan't Create/open Output File...!\n"RESET);
+        return FAILURE ;
+     }
+
+     printf(GREEN"\n# File's Opened Successfully...!\n"RESET);
+
+     return SUCCESS ;
+
+} 
+
+Status add_bmp_header(Encode_info *encoInfo)
+{
+     uint8_t buffer[54];
+     
+     fread(buffer,1,54,encoInfo->source_file_ptr);
+     
+     uint write = fwrite(buffer,1,54,encoInfo->Output_file_ptr);
+
+     printf(GREEN"\n# bmp Header %u bytes Copied to output file...!\n"RESET,write);
+     
+     encoInfo->bytes_encoded = encoInfo->bytes_encoded + write ;
+
+     printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+     return SUCCESS ;
+}
+
+Status Encode_Magic_String(Encode_info *encoInfo,char *magic_str)
+{
+     uint n = strlen(magic_str);
+     uint write = 0 ;
+
+     char buffer[8];
+
+     for(int i = 0 ; i<n ; i++)
+     {
+        fread(buffer,1,8,encoInfo->source_file_ptr);
+        Encode_bits(magic_str[i],buffer);
+        write = write + fwrite(buffer,1,8,encoInfo->Output_file_ptr); 
+     }
+     
+     encoInfo->bytes_encoded = encoInfo->bytes_encoded + write ;
+
+     printf(GREEN"\n# Magic String Successfully Encoded\n"RESET);
+
+     printf(GREEN"\n>> Bytes encoded : %u bytes\n",encoInfo->bytes_encoded);
+
+     return SUCCESS ;
+}
+
+Status Encode_bits(char bits,char buffer[])
+{
+    for(int i = 0; i<8 ; i++)
+    {
+        uint n = (bits >> (7-i)) & 1 ;
+        buffer[i] = ( buffer[i] & 0xFE ) | n ;
+    }
+
+    return SUCCESS;
+}
+
