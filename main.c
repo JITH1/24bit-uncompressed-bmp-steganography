@@ -91,7 +91,17 @@ int main(int argc ,char *argv[])
             {
                 printf(GREEN"\n-> Decode File Validation Successfull...!\n"RESET);
                 printf(GREEN"\n-> Proceeding to Decoding .... ! \n"RESET);
-
+                 
+                if(do_decoding(&decoInfo))
+                {
+                    printf(GREEN"\nDecoding Successfull...!\n"RESET);
+                    return SUCCESS ;
+                }
+                else
+                {
+                    printf(GREEN"\nDecoding Failed...!\n\n"RESET);
+                    return FAILURE ;
+                }
                 
             }
             else
