@@ -1,5 +1,6 @@
 #include "steggo.h"
 #include "encode.h"
+#include "decode.h"
 
 Operation_type validate_operation(char *argv[])
 {
@@ -23,6 +24,7 @@ int main(int argc ,char *argv[])
     int n ;
 
     Encode_info encoInfo ;
+    Decode_Info decoInfo ; 
 
     if(argc == 4)
     {
@@ -81,7 +83,28 @@ int main(int argc ,char *argv[])
     }
     else if(n == type_decode)
     {
-        printf(GREEN"\nPlease Wait The Coding Is In Progress...!\n"RESET);
+        if(validate_decode_arguments(argv))
+        {
+            printf(GREEN"\nDecode Argument Validation Successfull...!\n"RESET);
+            
+            if(validate_decode_files(&decoInfo,argv))
+            {
+                printf(GREEN"\n-> Decode File Validation Successfull...!\n"RESET);
+                printf(GREEN"\n-> Proceeding to Decoding .... ! \n"RESET);
+
+                
+            }
+            else
+            {
+                printf(RED"\nDecode File Validation Failed...!\n"RESET);
+                return FAILURE ;
+            }
+        }
+        else
+        {
+            printf(RED"\nDecode Argument Validation Failed...!\n"RESET);
+            return FAILURE ;
+        }
     }
 
     return 0 ;
