@@ -132,7 +132,7 @@ Status Validate_encode_files(Encode_info *encoInfo,char *argv[])
     
     printf(GREEN"# The %s capacity is : %u\n"RESET,encoInfo->source_file_name,encoInfo->source_bmp_capacity);
     
-    uint total_encoding_size = (uint)16 + (uint)32 + (uint)32 + (uint)32 + (uint)54 + encoInfo->secret_file_size * 8 ;
+    uint total_encoding_size = (uint)16 + (uint)32 + (uint)32 + (uint)32 + encoInfo->secret_file_size * 8 ;
 
     printf(GREEN"\nTotal Size Required For Encoding : %u\n",total_encoding_size);
 
@@ -207,43 +207,43 @@ Status Start_encoding(Encode_info *encoInfo)
         printf(GREEN"\nCan't Open Files...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+
     if(!add_bmp_header(encoInfo))
     {
         printf(GREEN"\nHeader Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+    
     if(!Encode_Magic_String(encoInfo,MAGIC))
     {
         printf(RED"\nMagic String Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+    
     if(!Encode_secret_file_extn_size(encoInfo))
     {
         printf(RED"\nSecret File Extn Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+    
     if(!Encode_secret_file_extn(encoInfo))
     {
         printf(RED"\n# Secret File Extn Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+   
     if(!Encode_secret_file_size(encoInfo))
     {
         printf(RED"\n# Secret File Size Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+    
     if(!Encode_secret_file_data(encoInfo))
     {
         printf(RED"\n# Secret File Data Encoding Failed...!\n"RESET);
         return FAILURE ;
     }
-    sleep(1);
+    
     if(!Encode_remaining(encoInfo))
     {
         printf(RED"\n# Pixel Encoding Failed...!\n"RESET);
@@ -290,9 +290,16 @@ Status Open_all_files(Encode_info *encoInfo)
 
 Status add_bmp_header(Encode_info *encoInfo)
 {
+
+     if(encoInfo->source_pixel_offset != 54)
+     {
+        printf("Unsupported BMP header layout\n");
+        return FAILURE;
+     }
+
      uint8_t buffer[54];
      
-     fread(buffer,1,54,encoInfo->source_file_ptr);
+     fread(buffer,1,encoInfo->source_pixel_offset,encoInfo->source_file_ptr);
      
      uint write = fwrite(buffer,1,54,encoInfo->Output_file_ptr);
 
@@ -391,7 +398,7 @@ Status Encode_secret_file_data(Encode_info *encoInfo)
 {
     char buffer[8];
 
-    uint size = strlen(encoInfo->secret_file_data);
+    uint size = encoInfo->secret_file_size ;
 
     for(int i = 0 ; i<size ; i++)
     {
@@ -412,9 +419,11 @@ Status Encode_remaining(Encode_info *encoInfo)
 {
     char buffer[32];
 
-    while((fread(buffer,1,32,encoInfo->source_file_ptr)) > 0)
+    size_t read ;
+
+    while((read = fread(buffer,1,32,encoInfo->source_file_ptr)) > 0)
     {
-        encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,32,encoInfo->Output_file_ptr);
+        encoInfo->bytes_encoded = encoInfo->bytes_encoded + fwrite(buffer,1,read,encoInfo->Output_file_ptr);
     }
 
     return SUCCESS ;

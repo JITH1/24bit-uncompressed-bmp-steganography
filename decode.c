@@ -103,7 +103,6 @@ Status validate_decode_files(Decode_Info *decoInfo ,char *argv[])
 
 Status do_decoding(Decode_Info *decoInfo)
 {
-    decoInfo->decoded_bytes = 0;
 
     if(!decode_magic_string(decoInfo,MAGIC))
     {

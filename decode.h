@@ -16,8 +16,6 @@ typedef struct
    long output_secret_size ;
    long output_file_ext_size ;
 
-   uint decoded_bytes ;
-
 }Decode_Info ;
 
 Status validate_decode_arguments(char *argv[]);
