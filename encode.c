@@ -1,7 +1,7 @@
 #include "steggo.h"
 #include "encode.h"
 
-Status Validate_encode_arguments(Encode_info *encoInfo,char *argv[])
+Status Validate_encode_arguments(char *argv[])
 {
     if(*argv[2] == '.')
     {
@@ -112,7 +112,7 @@ Status Validate_encode_files(Encode_info *encoInfo,char *argv[])
 
     encoInfo->secret_file_size  = read ;
 
-    if(encoInfo->secret_file_size > sizeof(encoInfo->secret_file_data))
+    if(encoInfo->secret_file_size > (long) sizeof(encoInfo->secret_file_data))
     {
         printf(RED"\nPlease Increase Buffer size...!\n"RESET);
         return FAILURE ;
@@ -319,7 +319,7 @@ Status Encode_Magic_String(Encode_info *encoInfo,char *magic_str)
 
      char buffer[8];
 
-     for(int i = 0 ; i<n ; i++)
+     for(unsigned int i = 0 ; i<n ; i++)
      {
         fread(buffer,1,8,encoInfo->source_file_ptr);
         Encode_bits(magic_str[i],buffer);
@@ -359,8 +359,10 @@ Status Encode_secret_file_extn(Encode_info *encoInfo)
     uint size = strlen(encoInfo->secret_file_extn);
 
     char buffer[8] ;
+
+    uint i ;
     
-    for(int i = 0 ; i<size ;  i++)
+    for( i = 0 ; i<size ;  i++)
     {
         fread(buffer,1,8,encoInfo->source_file_ptr);
 
@@ -399,8 +401,10 @@ Status Encode_secret_file_data(Encode_info *encoInfo)
     char buffer[8];
 
     uint size = encoInfo->secret_file_size ;
-
-    for(int i = 0 ; i<size ; i++)
+    
+    uint i;
+    
+    for( i = 0 ; i<size ; i++)
     {
         fread(buffer,1,8,encoInfo->source_file_ptr);
         Encode_bits(encoInfo->secret_file_data[i],buffer);

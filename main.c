@@ -47,7 +47,7 @@ int main(int argc ,char *argv[])
 
     if(n == type_encode)
     {
-        if(Validate_encode_arguments(&encoInfo,argv))
+        if(Validate_encode_arguments(argv))
         {
             printf(GREEN"\nEncode Argument Validation Successfull...!\n"RESET);
 
